@@ -1,0 +1,22 @@
+BASE hierarchy for Machine Learning Project
+
+analyze
+Scripts to analyze output, creating graphs and stats
+
+data
+This folder is to download/create/manipulate datas
+
+lib
+Useful script not related to Machine Learning, for example handling bounding boxes
+
+src
+Machine learning algorithm, model's definition, loss function, ect
+
+test
+Unit test of the application
+
+To make h5py running
+sudo apt-get install libhdf5-dev
+
+To install all dependencies
+pip3.5 install -r requirements.txt
