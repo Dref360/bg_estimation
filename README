@@ -20,3 +20,14 @@ sudo apt-get install libhdf5-dev
 
 To install all dependencies
 pip3.5 install -r requirements.txt
+
+To install Tensorflow 0.9
+
+With GPU
+export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/mac/gpu/tensorflow-0.10.0rc0-py3-none-any.whl
+
+CPU only
+export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-0.10.0rc0-py3-none-any.whl
+
+pip3.5 install --upgrade $TF_BINARY_URL
+
