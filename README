@@ -1,33 +1,8 @@
-BASE hierarchy for Machine Learning Project
+Background estimation using deep learning
 
-analyze
-Scripts to analyze output, creating graphs and stats
-
-data
-This folder is to download/create/manipulate datas
-
-lib
-Useful script not related to Machine Learning, for example handling bounding boxes
-
-src
-Machine learning algorithm, model's definition, loss function, ect
-
-test
-Unit test of the application
-
-To make h5py running
-sudo apt-get install libhdf5-dev
-
-To install all dependencies
-pip3.5 install -r requirements.txt
-
-To install Tensorflow 0.9
-
-With GPU
-export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/mac/gpu/tensorflow-0.10.0rc0-py3-none-any.whl
-
-CPU only
-export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-0.10.0rc0-py3-none-any.whl
-
-pip3.5 install --upgrade $TF_BINARY_URL
-
+TODO
+-Manipulate datas
+-Conv3d
+-CRNN
+-GAN
+-VAE
