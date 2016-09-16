@@ -6,3 +6,11 @@ TODO
 -CRNN
 -GAN
 -VAE
+
+
+Install TF
+export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow-0.10.0-cp34-cp34m-linux_x86_64.whl
+pip3 install --upgrade $TF_BINARY_URL
+
+Install cv3 on Ubuntu
+http://www.pyimagesearch.com/2015/06/22/install-opencv-3-0-and-python-2-7-on-ubuntu/
