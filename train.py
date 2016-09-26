@@ -11,7 +11,7 @@ parser.add_argument("--sequence_size", dest="sequence_size", default=10, type=in
 options = parser.parse_args()
 db = Database(options.db_path, options.sequence_size)
 
-model = C3DModel("C3DModel",options.sequence_size)
+model = C3DModel(options.sequence_size)
 
 gt = db.get_groundtruth()
 
