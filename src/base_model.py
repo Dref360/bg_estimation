@@ -22,5 +22,9 @@ class BaseModel():
     def train_on(self, batch, gt):
         raise NotImplemented
 
+    @abc.abstractmethod
+    def test_on(self,batch):
+        raise NotImplemented
+
     def get_model(self):
         return self.model

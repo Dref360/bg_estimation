@@ -1,7 +1,10 @@
 # Here, we write the code to train the model
 import argparse
-from src.c3d import C3DModel
+
+import numpy as np
+
 from data.database import Database
+from src.c3d import C3DModel
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--db_path", dest="db_path", default="../dataset", type=str, help="dataset path")
@@ -13,17 +16,18 @@ db = Database(options.db_path, options.sequence_size)
 
 model = C3DModel(options.sequence_size)
 
-gt = db.get_groundtruth()
-
-batch = db.next_batch()
 n_epoch = 0
 max_epoch = 10
+batch = db.next_batch()
+gt = [db.get_groundtruth()] * len(batch)
 while n_epoch != max_epoch:
-    model.train_on(batch, gt)
-    if None in batch:
+    model.train_on(np.asarray(batch), np.asarray(gt))
+    if np.any((batch == None)):
+        print("NEW VIDEO")
         if db.next_video():
             n_epoch += 1
-            gt = db.get_groundtruth()
+            print("NEW EPOCH")
     batch = db.next_batch()
+    gt = [db.get_groundtruth()] * len(batch)
 
 model.get_model().save_weight("{}_w.h5".format(model.name))

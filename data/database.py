@@ -1,16 +1,18 @@
 import os
 
 import cv2
+import numpy as np
 
 pjoin = os.path.join
 
 
 class Database:
-    def __init__(self, path, sequence_size, size=321):
+    def __init__(self, path, sequence_size,batch_size=1, size=321):
         self.videos = []
         self.id = 0
         self.size = size
         self.video_id = -1
+        self.batch_size=batch_size
         self.current_inputs = None
         self.sequence_size = sequence_size
         assert os.path.exists(path)
@@ -36,10 +38,13 @@ class Database:
         return self.video_id == 0
 
     def next_batch(self):
-        batch = self.current_inputs[self.id:self.id + self.sequence_size]
-        self.id += 1
-        batch = [cv2.resize(cv2.imread(pjoin(self.base_dir, i)), (self.size, self.size)) for i in batch]
-        batch += [None] * (self.sequence_size - len(batch))
+        batch = []
+        for _ in range(self.batch_size):
+            batch1 = self.current_inputs[self.id:self.id + self.sequence_size]
+            self.id += 1
+            batch1 = [cv2.resize(cv2.imread(pjoin(self.base_dir, i)), (self.size, self.size)) for i in batch1]
+            batch1 += [None] * (self.sequence_size - len(batch1))
+            batch.append(batch1)
         return batch
 
 

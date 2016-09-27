@@ -10,12 +10,16 @@ class C3DModel(BaseModel):
     def loss_img(self,y,y_pred):
         return K.mean(K.binary_crossentropy(y_pred,y))
 
+    def test_on(self,batch):
+        batch = np.transpose(batch, [0, 4, 1, 2, 3])
+        return self.model.predict(batch,1)
+
 
     def train_on(self, batch, gt):
-        batch = np.transpose(batch,[3,0,1,2])
-        batch = np.array([batch])
+        batch = np.transpose(batch,[0,4,1,2,3])
+        batch = np.array(batch)
         gt = gt.reshape([self.batch_size,1,self.img_size,self.img_size])
-        return self.model.fit(batch ,gt,batch_size=1)
+        return self.model.fit(batch ,gt,nb_epoch=1)
 
     def __init__(self, sequence_size, img_size=321, weight_file=None):
         BaseModel.__init__(self, "C3DModel")
