@@ -28,6 +28,10 @@ class Database:
     def get_groundtruth(self):
         return cv2.resize(cv2.imread(self.videos[self.video_id]["gt"], 0), (self.size, self.size))
 
+    def get_groundtruth_with_batch(self):
+        gt = cv2.resize(cv2.imread(self.videos[self.video_id]["gt"], 0), (self.size, self.size))
+        return np.asarray([np.copy(gt) for i in range(self.batch_size)])
+
     def next_video(self):
         self.video_id += 1 % len(self.videos)
         self.id = 0
@@ -43,9 +47,8 @@ class Database:
             batch1 = self.current_inputs[self.id:self.id + self.sequence_size]
             self.id += 1
             batch1 = [cv2.resize(cv2.imread(pjoin(self.base_dir, i)), (self.size, self.size)) for i in batch1]
-            batch1 += [None] * (self.sequence_size - len(batch1))
             batch.append(batch1)
-        return batch
+        return np.asarray(batch)
 
 
 if __name__ == "__main__":
