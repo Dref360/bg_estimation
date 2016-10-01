@@ -1,6 +1,6 @@
 # Here, we write the code to train the model
 import argparse
-
+from tqdm import tqdm
 import numpy as np
 
 from data.database import Database
@@ -19,14 +19,18 @@ model = C3DModel(options.sequence_size)
 n_epoch = 0
 max_epoch = 10
 for i in range(max_epoch):
-    for vid in range(len(db.videos)):
+    print("EPOCH {}".format(i))
+    for vid in tqdm(range(len(db.videos))):
         batch = db.next_batch()
-        gt = db.get_groundtruth_with_batch()
-        while len(batch) == batch_size:
-            model.train_on(batch,gt)
+        gt = db.get_groundtruth_with_batch(255.0)
+        o = 0
+        while len(batch) == batch_size and batch.shape[1] == options.sequence_size:
+            loss = model.train_on(batch,gt)
+            if o % 100 == 0:
+              print(loss)
             batch = db.next_batch()
         db.next_video()
     n_epoch += 1
 
 
-model.get_model().save_weight("{}_w.h5".format(model.name))
+model.get_model().save_weights("{}_w.h5".format(model.name))

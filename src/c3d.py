@@ -19,7 +19,7 @@ class C3DModel(BaseModel):
         batch = np.transpose(batch,[0,4,1,2,3])
         batch = np.array(batch)
         gt = gt.reshape([self.batch_size,1,self.img_size,self.img_size])
-        return self.model.fit(batch ,gt,nb_epoch=1)
+        return self.model.train_on_batch(batch ,gt)
 
     def __init__(self, sequence_size, img_size=321, weight_file=None):
         BaseModel.__init__(self, "C3DModel")
