@@ -41,6 +41,9 @@ class Database:
         self.current_inputs = sorted(self.current_inputs, key=lambda x: int(x[2:-4]))
         return self.video_id == 0
 
+    def get_total_count(self):
+        return sum([len(os.listdir(self.videos[i]["input"])) for i in range(len(self.videos))])
+
     def next_batch(self):
         batch = []
         for _ in range(self.batch_size):

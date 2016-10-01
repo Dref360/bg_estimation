@@ -19,6 +19,10 @@ class BaseModel():
         self.model = None
 
     @abc.abstractmethod
+    def preprocess(self,batch,gt):
+        raise NotImplemented
+
+    @abc.abstractmethod
     def train_on(self, batch, gt):
         raise NotImplemented
 
