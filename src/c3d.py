@@ -24,13 +24,13 @@ class C3DModel(BaseModel):
         batch, gt = self.preprocess(batch, gt)
         return self.model.train_on_batch(batch, gt)
 
-    def __init__(self, sequence_size, img_size=321, output_size=321, weight_file=None):
+    def __init__(self, sequence_size, img_size=321,batch_size=1, weight_file=None):
         BaseModel.__init__(self, "C3DModel")
-        self.batch_size = 1
-        self.output_size = output_size
+        self.batch_size = batch_size
         self.sequence_size = sequence_size
         self.img_size = img_size
         self.model = self.build_model()
+        self.output_size = self.model.get_output_shape_at(-1)[-1]
         if weight_file:
             self.model.load_weights(weight_file)
 
