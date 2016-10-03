@@ -2,8 +2,10 @@
 import argparse
 
 import keras
+import numpy as np
 
 from data.database import Database
+from lib.utils import chunks
 from src.c3d import C3DModel
 
 parser = argparse.ArgumentParser()
@@ -22,19 +24,19 @@ db = Database(options.db_path, options.sequence_size, batch_size=options.batch_s
 n_epoch = 0
 max_epoch = 10
 
+
 def get_generator():
-    for i in range(max_epoch):
-        print("EPOCH {}".format(i))
-        for vid in range(len(db.videos)):
-            batch = db.next_batch()
-            gt = db.get_groundtruth_with_batch(255.0)
-            while len(batch) == batch_size and batch.shape[1] == options.sequence_size:
-                yield model.preprocess(batch, gt)
-                batch = db.next_batch()
-            db.next_video()
+    for (imgs, gt) in db.get_datas():
+        yield model.preprocess(np.asarray([db.load_imgs(imgs)]), gt)
 
 
-model.get_model().fit_generator(get_generator(), db.get_total_count(), max_epoch,
+def get_generator_batched():
+    for batch in chunks(db.get_datas(), options.batch_size):
+        imgs, gts = zip(*batch)
+        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
+
+
+model.get_model().fit_generator(get_generator_batched(), db.get_total_count(), max_epoch,
                                 callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True)])
 
 model.get_model().save_weights("{}_w.h5".format(model.name))
