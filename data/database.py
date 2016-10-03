@@ -29,7 +29,8 @@ class Database:
 
     def get_datas(self):
         acc = []
-        for video in self.videos:
+        for id in range(self.max_video):
+            video = self.videos[id]
             gt = self.get_groundtruth(video["gt"], 255.0)
             current_inputs = os.listdir(self.videos[self.video_id]["input"])
             current_inputs = sorted(current_inputs, key=lambda x: int(x[2:-4]))
