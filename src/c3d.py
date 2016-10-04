@@ -37,8 +37,9 @@ class C3DModel(BaseModel):
     def build_model(self):
         inputs = layers.Input(shape=(3, self.sequence_size, self.img_size, self.img_size))
         x = layers.Convolution3D(16, 3, 3, 3, activation=Relu, border_mode="same")(inputs)
+        x = layers.Convolution3D(1, 3, 3, 3, activation=Relu, border_mode="same")(x)
         print(x.get_shape())
-        x = layers.Lambda(lambda x1: K.mean(x1, axis=2))(x)
+        x = layers.Reshape([self.sequence_size,321,321])(x)
         print(x.get_shape())
         x = layers.Convolution2D(64, 3, 3, activation=Relu, border_mode="same")(x)
         x = layers.MaxPooling2D((2, 2))(x)
@@ -50,6 +51,6 @@ class C3DModel(BaseModel):
         print(x.get_shape())
         model = Model(input=inputs, output=x)
         model.compile(optimizer='rmsprop',
-                      loss='binary_crossentropy',
+                      loss=self.loss_DSSIS,
                       metrics=['accuracy'])
         return model

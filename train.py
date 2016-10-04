@@ -37,6 +37,6 @@ def get_generator_batched():
 
 
 model.get_model().fit_generator(get_generator_batched(), db.get_total_count(), max_epoch,
-                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True),CSVLogger("log.csv",append=True)])
+                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True),CSVLogger("log.csv",append=True)]) 
 
 model.get_model().save_weights("{}_w.h5".format(model.name))
