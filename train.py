@@ -3,6 +3,7 @@ import argparse
 
 import keras
 import numpy as np
+import json
 
 from data.database import Database
 from lib.utils import chunks, CSVLogger
@@ -36,7 +37,18 @@ def get_generator_batched():
         yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
 
 
-model.get_model().fit_generator(get_generator_batched(), db.get_total_count(), max_epoch,
-                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True),CSVLogger("log.csv",append=True)]) 
+def get_validation_generator_batched():
+    for batch in chunks(db.get_tests(), options.batch_size):
+        imgs, gts = zip(*batch)
+        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
+
+
+model.get_model().fit_generator(generator=get_generator_batched(),samples_per_epoch=db.get_total_count(),nb_epoch=max_epoch,
+                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True),
+                                           CSVLogger("log.csv", append=True)])
+
+history = model.get_model().evaluate_generator(get_validation_generator_batched(),db.get_total_test_count())
+with open("history.log","w") as f:
+    json.dump(history,f)
 
 model.get_model().save_weights("{}_w.h5".format(model.name))
