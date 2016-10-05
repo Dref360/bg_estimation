@@ -31,7 +31,7 @@ class BaseModel():
         c2 = 0.03 ** 2
         ssim = (2 * u_true * u_pred + c1) * (2 * std_pred * std_true + c2)
         ssim /= (u_true ** 2 + u_pred ** 2 + c1) * (var_pred + var_true + c2)
-        return (1.0 - ssim) / 2
+        return ((1.0 - ssim) / 2 + K.binary_crossentropy(y_pred,y_true,True)) /2.0
 
     @abc.abstractmethod
     def preprocess(self, batch, gt):

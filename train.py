@@ -15,6 +15,7 @@ parser.add_argument("--model", dest="model", type=str, help="model weight to be 
 parser.add_argument("--sequence_size", dest="sequence_size", default=10, type=int, help="batch size")
 parser.add_argument("--batch_size", dest="batch_size", default=1, type=int, help="batch size")
 parser.add_argument("--custom_lenght", dest="custom_lenght", default=None, type=int, help="max video to look at")
+parser.add_argument("--n_epochs", dest="n_epochs", default=10, type=int, help="nb epochs")
 batch_size = 1
 options = parser.parse_args()
 
@@ -23,7 +24,7 @@ db = Database(options.db_path, options.sequence_size, batch_size=options.batch_s
               output_size=model.output_size, custom_lenght=options.custom_lenght)
 
 n_epoch = 0
-max_epoch = 10
+max_epoch = options.n_epochs
 
 
 def get_generator():
