@@ -1,9 +1,10 @@
 # Here, we write the code to train the model
 import argparse
+import json
 
+import cv2
 import keras
 import numpy as np
-import json
 
 from data.database import Database
 from lib.utils import chunks, CSVLogger
@@ -44,12 +45,23 @@ def get_validation_generator_batched():
         yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
 
 
-model.get_model().fit_generator(generator=get_generator_batched(),samples_per_epoch=db.get_total_count(),nb_epoch=max_epoch,
+def save_one():
+    imgs, gts = next(get_generator())
+
+    img = model.get_model().predict(imgs)[0]
+    cv2.imwrite("output.png", 255.0 * np.reshape(img, [model.output_size, model.output_size]))
+    cv2.imwrite("gt.png", 255. * np.reshape(gts, [model.output_size, model.output_size]))
+
+
+model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
+                                nb_epoch=max_epoch,
                                 callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True),
                                            CSVLogger("log.csv", append=True)])
 
-history = model.get_model().evaluate_generator(get_validation_generator_batched(),db.get_total_test_count())
-with open("history.log","w") as f:
-    json.dump(history,f)
+history = model.get_model().evaluate_generator(get_validation_generator_batched(), db.get_total_test_count())
+with open("history.log", "w") as f:
+    json.dump(history, f)
+
+save_one()
 
 model.get_model().save_weights("{}_w.h5".format(model.name))

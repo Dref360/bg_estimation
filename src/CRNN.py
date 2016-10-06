@@ -6,9 +6,7 @@ from keras.models import Model
 from src.base_model import BaseModel, Relu
 
 
-class C3DModel(BaseModel):
-    def loss_img(self, y, y_pred):
-        return K.mean(K.binary_crossentropy(y_pred, y))
+class CRNN(BaseModel):
 
     def test_on(self, batch):
         batch = np.transpose(batch, [0, 4, 1, 2, 3])
@@ -25,7 +23,8 @@ class C3DModel(BaseModel):
         return self.model.train_on_batch(batch, gt)
 
     def __init__(self, sequence_size, img_size=321,batch_size=1, weight_file=None):
-        BaseModel.__init__(self, "C3DModel",batch_size)
+        BaseModel.__init__(self, "C3DModel")
+        self.batch_size = batch_size
         self.sequence_size = sequence_size
         self.img_size = img_size
         self.model = self.build_model()
@@ -35,8 +34,14 @@ class C3DModel(BaseModel):
 
     def build_model(self):
         inputs = layers.Input(shape=(3, self.sequence_size, self.img_size, self.img_size))
-        x = layers.Convolution3D(16, 3, 3, 3, activation=Relu, border_mode="same")(inputs)
-        x = layers.Convolution3D(1, 3, 3, 3, activation=Relu, border_mode="same")(x)
+        x = layers.TimeDistributed(layers.Convolution2D(16, 3, 3, 3, activation=Relu, border_mode="same"))(inputs)
+        x = layers.TimeDistributed(layers.Convolution2D(16, 3, 3, 3, activation=Relu, border_mode="same"))(x)
+        x = layers.TimeDistributed(layers.MaxPooling2D((2, 2)))(x)
+        x = layers.TimeDistributed(layers.Convolution2D(16, 3, 3, 3, activation=Relu, border_mode="same"))(x)
+        x = layers.TimeDistributed(layers.Convolution2D(16, 3, 3, 3, activation=Relu, border_mode="same"))(x)
+        x = layers.TimeDistributed(layers.MaxPooling2D((2, 2)))(x)
+        x = layers.TimeDistributed(layers.Convolution2D(16, 3, 3, 3, activation=Relu, border_mode="same"))(x)
+        x = layers.LSTM(64,32)(x)
         print(x.get_shape())
         x = layers.Reshape([self.sequence_size,321,321])(x)
         print(x.get_shape())
@@ -50,6 +55,6 @@ class C3DModel(BaseModel):
         print(x.get_shape())
         model = Model(input=inputs, output=x)
         model.compile(optimizer='rmsprop',
-                      loss=self.loss_DSSIS_tf11,
+                      loss=self.loss_DSSIS,
                       metrics=['accuracy'])
         return model

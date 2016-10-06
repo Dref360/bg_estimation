@@ -8,6 +8,9 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
+def get_shape(T):
+    return [i.value for i in T.get_shape()]
+
 
 class CSVLogger(keras.callbacks.Callback):
     '''Callback that streams epoch results to a csv file.
