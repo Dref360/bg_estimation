@@ -8,6 +8,7 @@ import numpy as np
 
 from data.database import Database
 from lib.utils import chunks, CSVLogger
+from lib.img_sim import compute_ssim
 from src.c3d import C3DModel
 
 parser = argparse.ArgumentParser()
@@ -49,19 +50,22 @@ def save_one():
     imgs, gts = next(get_generator())
 
     img = model.get_model().predict(imgs)[0]
-    cv2.imwrite("output.png", 255.0 * np.reshape(img, [model.output_size, model.output_size]))
-    cv2.imwrite("gt.png", 255. * np.reshape(gts, [model.output_size, model.output_size]))
+    output = 255.0 * np.reshape(img, [model.output_size, model.output_size])
+    gt = 255. * np.reshape(gts, [model.output_size, model.output_size])
+    cv2.imwrite("output.png", output)
+    cv2.imwrite("gt.png", gt)
+    return abs(compute_ssim(output,gt,255))
 
 
 model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
                                 nb_epoch=max_epoch,
-                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model", save_best_only=True),
+                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model"),
                                            CSVLogger("log.csv", append=True)])
 
 history = model.get_model().evaluate_generator(get_validation_generator_batched(), db.get_total_test_count())
 with open("history.log", "w") as f:
     json.dump(history, f)
 
-save_one()
+print(save_one())
 
 model.get_model().save_weights("{}_w.h5".format(model.name))

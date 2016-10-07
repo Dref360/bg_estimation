@@ -50,6 +50,6 @@ class C3DModel(BaseModel):
         print(x.get_shape())
         model = Model(input=inputs, output=x)
         model.compile(optimizer='rmsprop',
-                      loss=self.loss_DSSIS_tf11,
+                      loss=self.loss_DSSIS,
                       metrics=['accuracy'])
         return model
