@@ -2,7 +2,7 @@ Background estimation using deep learning
 
 TODO
 -Manipulate datas
--Conv3d
+-[x]Conv3d
 -CRNN
 -GAN
 -VAE
