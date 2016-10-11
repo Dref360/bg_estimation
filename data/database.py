@@ -35,19 +35,21 @@ class Database:
             current_inputs = os.listdir(self.videos[self.video_id]["input"])
             current_inputs = sorted(current_inputs, key=lambda x: int(x[2:-4]))
             current_inputs = [pjoin(self.videos[self.video_id]["input"], i) for i in current_inputs]
-            acc += [(current_inputs[i:i + 10], gt) for i in range(len(current_inputs) - 10)]
+            acc += [(current_inputs[i:i + self.sequence_size], gt) for i in
+                    range(len(current_inputs) - self.sequence_size)]
         shuffle(acc)
         return acc
 
-    def get_tests(  self):
+    def get_tests(self):
         acc = []
-        for id in range(self.max_video,len(self.videos)):
+        for id in range(self.max_video, len(self.videos)):
             video = self.videos[id]
             gt = self.get_groundtruth(video["gt"], 255.0)
             current_inputs = os.listdir(self.videos[self.video_id]["input"])
             current_inputs = sorted(current_inputs, key=lambda x: int(x[2:-4]))
             current_inputs = [pjoin(self.videos[self.video_id]["input"], i) for i in current_inputs]
-            acc += [(current_inputs[i:i + 10], gt) for i in range(len(current_inputs) - 10)]
+            acc += [(current_inputs[i:i + self.sequence_size], gt) for i in
+                    range(len(current_inputs) - self.sequence_size)]
         shuffle(acc)
         return acc
 
@@ -63,7 +65,7 @@ class Database:
         return sum([len(os.listdir(self.videos[i]["input"])) for i in range(self.max_video)])
 
     def get_total_test_count(self):
-        return sum([len(os.listdir(self.videos[i]["input"])) for i in range(self.max_video,len(self.videos))])
+        return sum([len(os.listdir(self.videos[i]["input"])) for i in range(self.max_video, len(self.videos))])
 
     def load_imgs(self, imgs):
         return np.asarray([cv2.resize(cv2.imread(i), (self.size, self.size)) for i in imgs])
