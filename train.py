@@ -11,6 +11,7 @@ from lib.utils import chunks, CSVLogger
 from lib.img_sim import compute_ssim
 from src.c3d import C3DModel
 from src.CRNN import CRNN
+from src.vae import VAE
 import logging
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -36,6 +37,8 @@ if options.method == "c3d":
     model = C3DModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 elif options.method == "crnn":
     model = CRNN(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
+elif options.method == "vae":
+    model = VAE(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 else:
     print("{} is not available at this moment".format(options.method))
     exit(0)
