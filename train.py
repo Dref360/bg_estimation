@@ -74,12 +74,13 @@ def save_one():
     cv2.imwrite("gt.png", gt)
     return abs(compute_ssim(output, gt, 255))
 
-
-model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
+try:
+  model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
                                 nb_epoch=max_epoch,
                                 callbacks=[keras.callbacks.ModelCheckpoint("mod.model"),
                                            CSVLogger("log.csv", append=True)])
-
+except StopIteration:
+  logging.warning("Model stopped training!")
 history = model.get_model().evaluate_generator(get_validation_generator_batched(), db.get_total_test_count())
 logging.info(history)
 with open("history.log", "w") as f:

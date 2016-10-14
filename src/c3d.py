@@ -8,7 +8,7 @@ from src.base_model import BaseModel, Relu
 
 class C3DModel(BaseModel):
     def loss_img(self, y, y_pred):
-        return K.mean(K.binary_crossentropy(y_pred, y))
+        return K.sum(K.pow(y-y_pred,2))
 
     def test_on(self, batch):
         batch = np.transpose(batch, [0, 4, 1, 2, 3])
@@ -50,6 +50,6 @@ class C3DModel(BaseModel):
         print(x.get_shape())
         model = Model(input=inputs, output=x)
         model.compile(optimizer='rmsprop',
-                      loss=self.loss_DSSIS,
+                      loss=self.loss_DSSIS_tf11,
                       metrics=['accuracy'])
         return model
