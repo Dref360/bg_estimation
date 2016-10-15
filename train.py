@@ -1,18 +1,18 @@
 # Here, we write the code to train the model
 import argparse
 import json
+import logging
 
 import cv2
 import keras
 import numpy as np
 
 from data.database import Database
-from lib.utils import chunks, CSVLogger
 from lib.img_sim import compute_ssim
-from src.c3d import C3DModel
+from lib.utils import chunks, CSVLogger
 from src.CRNN import CRNN
+from src.c3d import C3DModel
 from src.vae import VAE
-import logging
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--db_path", dest="db_path", default="../dataset", type=str, help="dataset path")
@@ -82,8 +82,10 @@ try:
                                 nb_epoch=max_epoch,
                                 callbacks=[keras.callbacks.ModelCheckpoint("mod.model"),
                                            CSVLogger("log.csv", append=True)])
-except StopIteration:
+except Exception:
   logging.warning("Model stopped training!")
+
+logging.info("Starting Testing")
 history = model.get_model().evaluate_generator(get_validation_generator_batched(), db.get_total_test_count())
 logging.info(history)
 with open("history.log", "w") as f:

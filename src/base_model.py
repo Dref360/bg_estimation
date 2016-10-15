@@ -43,7 +43,8 @@ class BaseModel():
         c2 = 0.03 ** 2
         ssim = (2 * u_true * u_pred + c1) * (2 * std_pred * std_true + c2)
         denom = (u_true ** 2 + u_pred ** 2 + c1) * (var_pred + var_true + c2)
-        ssim = tf.select(tf.is_nan(denom), K.zeros_like(ssim), ssim / denom)
+        ssim /= denom
+        ssim = tf.select(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
         return K.mean(((1.0 - ssim) / 2))
 
     def loss_DSSIS(self, y_true, y_pred):
