@@ -1,7 +1,6 @@
 '''
 Reference: "Auto-Encoding Variational Bayes" https://arxiv.org/abs/1312.6114
 '''
-import numpy as np
 from keras import backend as K
 from keras import objectives
 from keras.layers import Convolution2D, Convolution3D, MaxPooling3D, Deconvolution2D
@@ -16,16 +15,10 @@ class VAE(BaseModel):
         BaseModel.__init__(self, "CRNN", batch_size)
         self.sequence_size = sequence_size
         self.img_size = img_size
-        self.model = self.build_model()
+        self.build_model(loss=self.vae_loss)
         self.output_size = self.model.get_output_shape_at(-1)[-1]
         if weight_file:
             self.model.load_weights(weight_file)
-
-    def preprocess(self, batch, gt):
-        batch = np.transpose(batch, [0, 4, 1, 2, 3])
-        batch = np.array(batch)
-        gt = gt.reshape([self.batch_size, 1, self.output_size, self.output_size])
-        return (batch, gt)
 
     def vae_loss(self, x, x_decoded_mean):
         # NOTE: binary_crossentropy expects a batch_size by dim
@@ -36,7 +29,7 @@ class VAE(BaseModel):
         kl_loss = - 0.5 * K.mean(1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
         return xent_loss + kl_loss
 
-    def build_model(self):
+    def _build_model(self):
         latent_dim = 2
         intermediate_dim = 128
         epsilon_std = 0.01
@@ -110,5 +103,4 @@ class VAE(BaseModel):
         x_decoded_mean_squash = decoder_mean_squash(x_decoded_relu)
         vae = Model(inputs, x_decoded_mean_squash)
         vae.compile(optimizer='rmsprop', loss=self.vae_loss)
-        vae.summary()
         return vae

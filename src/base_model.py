@@ -1,6 +1,7 @@
 import abc
 
 import keras.backend as K
+import numpy as np
 import tensorflow as tf
 
 from lib.utils import get_shape
@@ -23,6 +24,19 @@ class BaseModel():
         self.name = name
         self.model = None
         self.batch_size = batchsize
+
+    @abc.abstractmethod
+    def _build_model(self):
+        raise NotImplementedError
+
+    def preprocess(self, batch, gt):
+        batch = np.transpose(batch, [0, 4, 1, 2, 3])
+        batch = np.array(batch)
+        gt = gt.reshape([self.batch_size, 1, self.output_size, self.output_size])
+        return (batch, gt)
+
+    def l2_loss(self, y, y_pred):
+        return K.sum(K.pow(y - y_pred, 2))
 
     def loss_DSSIS_tf11(self, y_true, y_pred):
         """Need tf0.11rc to work"""
@@ -47,30 +61,17 @@ class BaseModel():
         ssim = tf.select(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
         return K.mean(((1.0 - ssim) / 2))
 
-    def loss_DSSIS(self, y_true, y_pred):
-        u_true = K.mean(y_true)
-        u_pred = K.mean(y_pred)
-        var_true = K.var(y_true)
-        var_pred = K.var(y_pred)
-        std_true = K.std(y_true)
-        std_pred = K.std(y_pred)
-        c1 = 0.01 ** 2
-        c2 = 0.03 ** 2
-        ssim = (2 * u_true * u_pred + c1) * (2 * std_pred * std_true + c2)
-        ssim /= (u_true ** 2 + u_pred ** 2 + c1) * (var_pred + var_true + c2)
-        return ((1.0 - ssim) / 2 + K.binary_crossentropy(y_pred, y_true, True)) / 2.0
+    def build_model(self, loss="DSSIS", optimizer="rmsprop"):
+        if loss == "DSSIS":
+            loss = self.loss_DSSIS_tf11
+        elif loss == "l2":
+            loss = self.l2_loss
 
-    @abc.abstractmethod
-    def preprocess(self, batch, gt):
-        raise NotImplemented
-
-    @abc.abstractmethod
-    def train_on(self, batch, gt):
-        raise NotImplemented
-
-    @abc.abstractmethod
-    def test_on(self, batch):
-        raise NotImplemented
+        self.model = self._build_model()
+        self.model.compile(optimizer=optimizer,
+                           loss=loss,
+                           metrics=['accuracy'])
+        self.model.summary()
 
     def get_model(self):
         return self.model
