@@ -32,7 +32,7 @@ class CRNN(BaseModel):
         x = UpSampling2D((2, 2))(x)
         x = Convolution2D(32, 3, 3, activation=Relu, border_mode='same')(x)
         x = UpSampling2D((2, 2))(x)
-        x = Convolution2D(1, 3, 3, activation=Relu, border_mode='same')(x)
+        x = Convolution2D(1, 3, 3, activation="sigmoid", border_mode='same')(x)
         x = UpSampling2D((2, 2))(x)
         model = Model(input=inputs, output=x)
         return model
