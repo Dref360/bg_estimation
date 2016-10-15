@@ -27,7 +27,7 @@ class VGG3DModel(BaseModel):
 
         x = Reshape([(self.sequence_size // 2) * 256, 80, 80])(x)
         x = Deconvolution2D((self.sequence_size // 2) * 256, 3, 3,
-                            [self.batch_size, (self.sequence_size // 2) * 256, 160, 160],
+                            [self.batch_size, (self.sequence_size // 2) * 256, 159, 159],
                             border_mode='same',
                             subsample=(2, 2),
                             activation=Relu)(x)

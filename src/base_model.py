@@ -24,6 +24,7 @@ class BaseModel():
         self.name = name
         self.model = None
         self.batch_size = batchsize
+        self.output_size = None
 
     @abc.abstractmethod
     def _build_model(self):
