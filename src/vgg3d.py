@@ -1,4 +1,5 @@
-from keras.layers import Convolution3D, Convolution2D, MaxPooling3D, Deconvolution2D, Reshape, Input
+from keras.layers import Convolution3D, Convolution2D, MaxPooling3D, Deconvolution2D, Reshape, Input, \
+    BatchNormalization, Dropout
 from keras.models import Model
 
 from src.base_model import BaseModel, Relu
@@ -17,13 +18,17 @@ class VGG3DModel(BaseModel):
     def _build_model(self):
         inputs = Input(shape=(3, self.sequence_size, self.img_size, self.img_size))
         x = Convolution3D(64, 3, 3, 3, activation=Relu, border_mode="same")(inputs)
+        x = BatchNormalization(axis=2)(x)
         x = MaxPooling3D((1, 2, 2), strides=(1, 2, 2), border_mode='valid')(x)
 
         x = Convolution3D(128, 3, 3, 3, activation=Relu, border_mode="same")(x)
+        x = BatchNormalization(axis=2)(x)
         x = MaxPooling3D((2, 2, 2), strides=(2, 2, 2), border_mode='valid')(x)
 
         x = Convolution3D(256, 3, 3, 3, activation=Relu, border_mode="same")(x)
+        x = Dropout(0.4)(x)
         x = Convolution3D(256, 3, 3, 3, activation=Relu, border_mode="same")(x)
+        x = BatchNormalization(axis=2)(x)
 
         x = Reshape([(self.sequence_size // 2) * 256, 80, 80])(x)
         x = Deconvolution2D((self.sequence_size // 2) * 256, 3, 3,
@@ -32,7 +37,10 @@ class VGG3DModel(BaseModel):
                             subsample=(2, 2),
                             activation=Relu)(x)
         x = Convolution2D(512, 3, 3, activation=Relu, border_mode="same")(x)
+        x = BatchNormalization(axis=1)(x)
         x = Convolution2D(64, 3, 3, activation=Relu, border_mode="same")(x)
+        x = Dropout(0.4)(x)
+        x = BatchNormalization(axis=1)(x)
         x = Convolution2D(1, 3, 3, activation="sigmoid", border_mode="same")(x)
         model = Model(input=inputs, output=x)
         return model
