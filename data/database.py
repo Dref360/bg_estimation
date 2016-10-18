@@ -57,17 +57,19 @@ class Database:
                            (self.output_size, self.output_size))) / ratio
 
     def get_groundtruth_with_batch(self, path, ratio=1.0):
-        gt = self.get_groundtruth(ratio, path)
+        gt = self.get_groundtruth(path,ratio)
         return np.asarray([np.copy(gt) for i in range(self.batch_size)])
 
     def get_total_count(self):
-        return sum([len(os.listdir(self.videos[i]["input"])) for i in range(self.max_video)])
+        return sum([len(os.listdir(self.videos[i]["input"])) - self.sequence_size for i in range(self.max_video)])
 
     def get_count_on_video(self, videoid):
-        return len(os.listdir(self.videos[videoid]["input"]))
+        return len(os.listdir(self.videos[videoid]["input"])) - self.sequence_size
 
     def get_total_test_count(self):
         return sum([len(os.listdir(self.videos[i]["input"])) for i in range(self.max_video, len(self.videos))])
 
     def load_imgs(self, imgs):
         return np.asarray([cv2.resize(cv2.imread(i), (self.size, self.size)) for i in imgs])
+
+

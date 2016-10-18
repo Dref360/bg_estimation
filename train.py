@@ -54,21 +54,25 @@ max_epoch = options.n_epochs
 
 
 def get_generator():
-    for (imgs, gt) in db.get_datas():
-        yield model.preprocess(np.asarray([db.load_imgs(imgs)]), db.get_groundtruth(gt, 255.0))
+    while True:
+        for (imgs, gt) in db.get_datas():
+            yield model.preprocess(np.asarray([db.load_imgs(imgs)]), db.get_groundtruth(gt, 255.0))
 
 
 def get_generator_batched():
-    for batch in chunks(db.get_datas(), options.batch_size):
-        imgs, gts = zip(*batch)
-        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
-                               np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
+    while True:
+        for batch in chunks(db.get_datas(), options.batch_size):
+            imgs, gts = zip(*batch)
+            yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
+                                   np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
 def get_validation_generator_batched():
-    for batch in chunks(db.get_tests(), options.batch_size):
-        imgs, gts = zip(*batch)
-        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
+    while True:
+        for batch in chunks(db.get_tests(), options.batch_size):
+            imgs, gts = zip(*batch)
+            yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
+                                   np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
 def save_one():
@@ -81,13 +85,14 @@ def save_one():
     cv2.imwrite("gt.png", gt)
     return abs(compute_ssim(output, gt, 255))
 
+
 try:
-  model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
-                                nb_epoch=max_epoch,
-                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model"),
-                                           CSVLogger("log.csv", append=True)])
+    model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
+                                    nb_epoch=max_epoch,
+                                    callbacks=[keras.callbacks.ModelCheckpoint("mod.model"),
+                                               CSVLogger("log.csv", append=True)])
 except Exception:
-  logging.warning("Model stopped training!")
+    logging.warning("Model stopped training!")
 
 logging.info("Starting Testing")
 history = model.get_model().evaluate_generator(get_validation_generator_batched(), db.get_total_test_count())
