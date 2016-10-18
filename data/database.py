@@ -33,11 +33,10 @@ class Database:
         return acc
 
     def get_datas_on_one(self, id):
-        gt = self.get_groundtruth_from_id(id)
         current_inputs = os.listdir(self.videos[id]["input"])
         current_inputs = sorted(current_inputs, key=lambda x: int(x[2:-4]))
         current_inputs = [pjoin(self.videos[id]["input"], i) for i in current_inputs]
-        res = [(current_inputs[i:i + self.sequence_size], gt) for i in
+        res = [(current_inputs[i:i + self.sequence_size], self.videos[id]["gt"]) for i in
                range(len(current_inputs) - self.sequence_size)]
         return res
 

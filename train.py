@@ -55,13 +55,14 @@ max_epoch = options.n_epochs
 
 def get_generator():
     for (imgs, gt) in db.get_datas():
-        yield model.preprocess(np.asarray([db.load_imgs(imgs)]), gt)
+        yield model.preprocess(np.asarray([db.load_imgs(imgs)]), db.get_groundtruth(gt, 255.0))
 
 
 def get_generator_batched():
     for batch in chunks(db.get_datas(), options.batch_size):
         imgs, gts = zip(*batch)
-        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
+        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
+                               np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
 def get_validation_generator_batched():
