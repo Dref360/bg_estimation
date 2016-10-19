@@ -1,6 +1,6 @@
 from math import floor
 
-import gauss
+import analyze.gauss as gauss
 import numpy as np
 from scipy import signal, ndimage
 
