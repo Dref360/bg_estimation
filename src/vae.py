@@ -25,7 +25,7 @@ class VAE(BaseModel):
         # for x and x_decoded_mean, so we MUST flatten these!
         x = K.flatten(x)
         x_decoded_mean = K.flatten(x_decoded_mean)
-        xent_loss = self.img_size * self.img_size * objectives.binary_crossentropy(x, x_decoded_mean)
+        xent_loss = self.output_size * self.output_size * objectives.binary_crossentropy(x, x_decoded_mean)
         kl_loss = - 0.5 * K.mean(1 + self.z_log_var - K.square(self.z_mean) - K.exp(self.z_log_var), axis=-1)
         return xent_loss + kl_loss
 
@@ -125,5 +125,6 @@ class VAE(BaseModel):
         x_decoded_relu = decoder_deconv_5_upsamp(deconv_4_decoded)
         x_decoded_mean_squash = decoder_mean_squash(x_decoded_relu)
         vae = Model(inputs, x_decoded_mean_squash)
+        self.output_size = vae.get_output_shape_at(-1)[-1]
         vae.compile(optimizer='rmsprop', loss=self.vae_loss)
         return vae
