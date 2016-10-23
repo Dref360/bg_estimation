@@ -90,6 +90,27 @@ class VAE(BaseModel):
                                                   border_mode='valid',
                                                   subsample=(2, 2),
                                                   activation='relu')
+
+        if K.image_dim_ordering() == 'th':
+            output_shape = (self.batch_size, nb_filters, 59, 59)
+        else:
+            output_shape = (self.batch_size, 59, 59, nb_filters)
+        decoder_deconv_4_upsamp = Deconvolution2D(nb_filters, 3, 3,
+                                                  output_shape,
+                                                  border_mode='valid',
+                                                  subsample=(2, 2),
+                                                  activation='relu')
+
+        if K.image_dim_ordering() == 'th':
+            output_shape = (self.batch_size, nb_filters, 119, 119)
+        else:
+            output_shape = (self.batch_size, 119, 119, nb_filters)
+        decoder_deconv_5_upsamp = Deconvolution2D(nb_filters, 3, 3,
+                                                  output_shape,
+                                                  border_mode='valid',
+                                                  subsample=(2, 2),
+                                                  activation='relu')
+
         decoder_mean_squash = Convolution2D(1, 2, 2,
                                             border_mode='valid',
                                             activation='sigmoid')
@@ -99,7 +120,9 @@ class VAE(BaseModel):
         reshape_decoded = decoder_reshape(up_decoded)
         deconv_1_decoded = decoder_deconv_1(reshape_decoded)
         deconv_2_decoded = decoder_deconv_2(deconv_1_decoded)
-        x_decoded_relu = decoder_deconv_3_upsamp(deconv_2_decoded)
+        deconv_3_decoded = decoder_deconv_3_upsamp(deconv_2_decoded)
+        deconv_4_decoded = decoder_deconv_4_upsamp(deconv_3_decoded)
+        x_decoded_relu = decoder_deconv_5_upsamp(deconv_4_decoded)
         x_decoded_mean_squash = decoder_mean_squash(x_decoded_relu)
         vae = Model(inputs, x_decoded_mean_squash)
         vae.compile(optimizer='rmsprop', loss=self.vae_loss)
