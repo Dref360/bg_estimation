@@ -19,6 +19,7 @@ def ssim(img1, img2, cs_map=False):
     size = min(img1.shape[0], 11)
     sigma = 1.5
     window = gauss.fspecial_gauss(size, sigma)
+    window = np.expand_dims(window,axis=2)
     K1 = 0.01
     K2 = 0.03
     L = 255  # bitdepth of image
@@ -52,7 +53,7 @@ def msssim(img1, img2):
     """
     level = 5
     weight = np.array([0.0448, 0.2856, 0.3001, 0.2363, 0.1333])
-    downsample_filter = np.ones((2, 2)) / 4.0
+    downsample_filter = np.ones((2, 2,1)) / 4.0
     im1 = img1.astype(np.float64)
     im2 = img2.astype(np.float64)
     mssim = np.array([])
@@ -81,7 +82,7 @@ def PeakSignaltoNoiseRatio(origImg, distImg, max_value=255):
     origImg = origImg.astype(float)
     distImg = distImg.astype(float)
 
-    M, N = np.shape(origImg)
+    M, N,C = np.shape(origImg)
     error = origImg - distImg
     MSE = sum(sum(error * error)) / (M * N)
 
@@ -143,8 +144,8 @@ def Evaluate(GT, BC):
     [M, N, C] = np.shape(GT)
     dimension = M * N
 
-    GT = np.ndarray((M, N, 3), 'u1', GT.tostring()).astype(float)
-    BC = np.ndarray((M, N, 3), 'u1', BC.tostring()).astype(float)
+    GT = np.ndarray((M, N, C), 'u1', GT.tostring()).astype(float)
+    BC = np.ndarray((M, N, C), 'u1', BC.tostring()).astype(float)
 
     if C == 3:  # In case of color images, use luminance in YCbCr
         R = GT[:, :, 0]
@@ -171,11 +172,13 @@ def Evaluate(GT, BC):
     threshold = 20
 
     Errors = Diff > threshold
+    print("LOL")
+    print(Errors.shape)
     EPs = sum(sum(Errors)).astype(float)
     pEPs = EPs / float(dimension)
 
     ########################## CEPs and pCEPs ################################
-    structure = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
+    structure = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]]).reshape([3,3,1])
     erodedErrors = ndimage.binary_erosion(
         Errors, structure).astype(Errors.dtype)
     CEPs = sum(sum(erodedErrors))
@@ -188,6 +191,7 @@ def Evaluate(GT, BC):
     PSNR = PeakSignaltoNoiseRatio(YGT, YBC)
 
     ############################# CQM ########################################
+    CQM = None
     if C == 3:
         CQM = cqm(GT, BC)
 
