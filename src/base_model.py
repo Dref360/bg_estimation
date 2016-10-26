@@ -25,6 +25,8 @@ class BaseModel():
         self.model = None
         self.batch_size = batchsize
         self.output_size = None
+        self.loss = self.loss_DSSIS_tf11
+        self.optimizer = "rmsprop"
 
     @abc.abstractmethod
     def _build_model(self):
@@ -67,12 +69,19 @@ class BaseModel():
             loss = self.loss_DSSIS_tf11
         elif loss == "l2":
             loss = self.l2_loss
+        self.loss = loss
+        self.optimizer = optimizer
 
         self.model = self._build_model()
         self.model.compile(optimizer=optimizer,
                            loss=loss,
                            metrics=['accuracy'])
         self.model.summary()
+
+    def reset(self):
+        self.model.compile(optimizer=self.optimizer,
+                           loss=self.loss,
+                           metrics=['accuracy'])
 
     def get_model(self):
         return self.model
