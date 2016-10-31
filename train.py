@@ -1,18 +1,20 @@
 # Here, we write the code to train the model
 import argparse
 import json
+import logging
 
 import cv2
 import keras
 import numpy as np
 
 from data.database import Database
-from lib.utils import chunks, CSVLogger
+from lib.decorator import GeneratorLoop
 from lib.img_sim import compute_ssim
-from src.c3d import C3DModel
+from lib.utils import chunks, CSVLogger
 from src.CRNN import CRNN
+from src.c3d import C3DModel
 from src.vae import VAE
-import logging
+from src.vgg3d import VGG3DModel
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--db_path", dest="db_path", default="../dataset", type=str, help="dataset path")
@@ -21,7 +23,7 @@ parser.add_argument("--sequence_size", dest="sequence_size", default=10, type=in
 parser.add_argument("--batch_size", dest="batch_size", default=1, type=int, help="batch size")
 parser.add_argument("--custom_lenght", dest="custom_lenght", default=None, type=int, help="max video to look at")
 parser.add_argument("--n_epochs", dest="n_epochs", default=10, type=int, help="nb epochs")
-parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,crnn,vae,gan]")
+parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,vgg,crnn,vae,gan]")
 batch_size = 1
 options = parser.parse_args()
 
@@ -30,7 +32,7 @@ logging.basicConfig(filename='logging.log', level=logging.DEBUG,
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
 logging.info(vars(options))
 
-methods = ["c3d", "crnn", "vae", "gan"]
+methods = ["c3d", "crnn", "vae", "gan", "vgg"]
 assert options.method in methods, "Not a valid method"
 
 if options.method == "c3d":
@@ -39,6 +41,8 @@ elif options.method == "crnn":
     model = CRNN(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 elif options.method == "vae":
     model = VAE(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
+elif options.method == "vgg":
+    model = VGG3DModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 else:
     print("{} is not available at this moment".format(options.method))
     exit(0)
@@ -50,21 +54,26 @@ n_epoch = 0
 max_epoch = options.n_epochs
 
 
+@GeneratorLoop
 def get_generator():
     for (imgs, gt) in db.get_datas():
-        yield model.preprocess(np.asarray([db.load_imgs(imgs)]), gt)
+        yield model.preprocess(np.asarray([db.load_imgs(imgs)]), db.get_groundtruth(gt, 255.0))
 
 
+@GeneratorLoop
 def get_generator_batched():
     for batch in chunks(db.get_datas(), options.batch_size):
         imgs, gts = zip(*batch)
-        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
+        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
+                               np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
+@GeneratorLoop
 def get_validation_generator_batched():
     for batch in chunks(db.get_tests(), options.batch_size):
         imgs, gts = zip(*batch)
-        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]), np.asarray(gts))
+        yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
+                               np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
 def save_one():
@@ -77,13 +86,18 @@ def save_one():
     cv2.imwrite("gt.png", gt)
     return abs(compute_ssim(output, gt, 255))
 
+
 try:
-  model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
-                                nb_epoch=max_epoch,
-                                callbacks=[keras.callbacks.ModelCheckpoint("mod.model"),
-                                           CSVLogger("log.csv", append=True)])
-except StopIteration:
-  logging.warning("Model stopped training!")
+    model.get_model().fit_generator(generator=get_generator_batched(), samples_per_epoch=db.get_total_count(),
+                                    nb_epoch=max_epoch,
+                                    callbacks=[keras.callbacks.ModelCheckpoint(
+                                        "mod_{}_{}{}.model".format(options.method, options.sequence_size,
+                                                                   options.custom_lenght)),
+                                               CSVLogger("log.csv", append=True)])
+except Exception:
+    logging.warning("Model stopped training!")
+
+logging.info("Starting Testing")
 history = model.get_model().evaluate_generator(get_validation_generator_batched(), db.get_total_test_count())
 logging.info(history)
 with open("history.log", "w") as f:
