@@ -172,8 +172,6 @@ def Evaluate(GT, BC):
     threshold = 20
 
     Errors = Diff > threshold
-    print("LOL")
-    print(Errors.shape)
     EPs = sum(sum(Errors)).astype(float)
     pEPs = EPs / float(dimension)
 

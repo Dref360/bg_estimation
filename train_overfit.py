@@ -72,19 +72,19 @@ def get_generator_test_batched_for_id(id, ratio):
 head = ['AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
 report = {"report": {}}
 for id in range(db.max_video):
+    print("VIDEO : {}".format(id))
     model.get_model().fit_generator(generator=get_generator_batched_for_id(id, options.ratio),
                                     samples_per_epoch=int(db.get_count_on_video(id) * options.ratio),
                                     nb_epoch=max_epoch,
                                     callbacks=[CSVLogger("log.csv", append=True)])
-    if db.get_count_on_video(options.videoid) * (1.0 - options.ratio) > 0:
-        outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(), int(
-            db.get_count_on_video(options.videoid) * (1.0 - options.ratio)))
-        gt = db.get_groundtruth_from_id(options.videoid)
+    if db.get_count_on_video(id) * (1.0 - options.ratio) > 0:
+        outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id,options.ratio), int(
+            db.get_count_on_video(id) * (1.0 - options.ratio)))
+        gt = db.get_groundtruth_from_id(id)
+        gt = gt.reshape(list(gt.shape) + [1])
         acc = []
         for i, output in enumerate(outputs):
-            acc.append(zip(head, Evaluate(gt, output)))
-
-        print(acc)
+            acc.append(list(zip(head, Evaluate(gt, output))))
         report["report"][id] = acc
-    model.reset()
+    #model.reset()
 json.dump(report,open("report{}.json".format(options.method)))
