@@ -1,9 +1,8 @@
-# Here, we write the code to train the model
+# Here, we write the code to train the model, we overfit the model on a video and evaluate the result
 import argparse
 import json
 import logging
 
-import keras
 import numpy as np
 
 from analyze.Evaluate import Evaluate
@@ -12,6 +11,7 @@ from lib.decorator import GeneratorLoop
 from lib.utils import chunks, CSVLogger
 from src.CRNN import CRNN
 from src.c3d import C3DModel
+from src.unet import UNETModel
 from src.vae import VAE
 from src.vgg3d import VGG3DModel
 
@@ -21,7 +21,7 @@ parser.add_argument("--weight_file", dest="weight_file", type=str, help="model w
 parser.add_argument("--sequence_size", dest="sequence_size", default=10, type=int, help="batch size")
 parser.add_argument("--batch_size", dest="batch_size", default=1, type=int, help="batch size")
 parser.add_argument("--n_epochs", dest="n_epochs", default=10, type=int, help="nb epochs")
-parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,vgg,crnn,vae,gan]")
+parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,vgg,crnn,vae,unet]")
 parser.add_argument("--ratio", dest="ratio", default=1.0, type=float, help="Ratio to separate train and test set")
 batch_size = 1
 options = parser.parse_args()
@@ -31,7 +31,7 @@ logging.basicConfig(filename='logging.log', level=logging.DEBUG,
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
 logging.info(vars(options))
 
-methods = ["c3d", "crnn", "vae", "gan", "vgg"]
+methods = ["c3d", "crnn", "vae", "unet", "vgg"]
 assert options.method in methods, "Not a valid method"
 
 if options.method == "c3d":
@@ -42,6 +42,8 @@ elif options.method == "vae":
     model = VAE(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 elif options.method == "vgg":
     model = VGG3DModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
+elif options.method == "unet":
+    model = UNETModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 else:
     print("{} is not available at this moment".format(options.method))
     exit(0)
@@ -85,6 +87,5 @@ for id in range(db.max_video):
         acc = []
         for i, output in enumerate(outputs):
             acc.append(list(zip(head, Evaluate(gt, output))))
-        report["report"][id] = acc
-    #model.reset()
-json.dump(report,open("report{}.json".format(options.method)))
+        report["report"]["{}_{}".format(db.videos[id]["input"], id)] = acc
+json.dump(report, open("report{}.json".format(options.method), "w"))
