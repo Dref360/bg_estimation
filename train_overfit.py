@@ -23,6 +23,10 @@ parser.add_argument("--batch_size", dest="batch_size", default=1, type=int, help
 parser.add_argument("--n_epochs", dest="n_epochs", default=10, type=int, help="nb epochs")
 parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,vgg,crnn,vae,unet]")
 parser.add_argument("--ratio", dest="ratio", default=1.0, type=float, help="Ratio to separate train and test set")
+"""Most of the model are too big to fit on the TITAN X, so it takes a really long time, taking a subset of the video
+ will speed up processing on big videos"""
+parser.add_argument("--max_length", dest="max_length", default=10000, type=int,
+                    help="Maximum training and testing set lenght")
 batch_size = 1
 options = parser.parse_args()
 
@@ -57,7 +61,8 @@ max_epoch = options.n_epochs
 
 @GeneratorLoop
 def get_generator_batched_for_id(id, ratio):
-    for batch in chunks(db.get_datas_on_one(id)[:int(db.get_count_on_video(id) * ratio)], options.batch_size):
+    for batch in chunks(db.get_datas_on_one(id)[:min(int(db.get_count_on_video(id) * ratio), options.max_length)],
+                        options.batch_size):
         imgs, gts = zip(*batch)
         yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
                                np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
@@ -65,7 +70,9 @@ def get_generator_batched_for_id(id, ratio):
 
 @GeneratorLoop
 def get_generator_test_batched_for_id(id, ratio):
-    for batch in chunks(db.get_datas_on_one(id)[int(db.get_count_on_video(id) * ratio):], options.batch_size):
+    max_test = db.get_count_on_video(id) - options.max_length
+    for batch in chunks(db.get_datas_on_one(id)[max(max_test, int(db.get_count_on_video(id) * ratio)):],
+                        options.batch_size):
         imgs, gts = zip(*batch)
         yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
                                np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
@@ -76,12 +83,14 @@ report = {"report": {}}
 for id in range(db.max_video):
     print("VIDEO : {}".format(id))
     model.get_model().fit_generator(generator=get_generator_batched_for_id(id, options.ratio),
-                                    samples_per_epoch=int(db.get_count_on_video(id) * options.ratio),
+                                    samples_per_epoch=min(int(db.get_count_on_video(id) * options.ratio),
+                                                          options.max_length),
                                     nb_epoch=max_epoch,
                                     callbacks=[CSVLogger("log.csv", append=True)])
-    if db.get_count_on_video(id) * (1.0 - options.ratio) > 0:
-        outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id,options.ratio), int(
-            db.get_count_on_video(id) * (1.0 - options.ratio)))
+    if db.get_count_on_video(id) * (1.0 - options.ratio) > 0 and options.max_length > 0:
+        max_test = db.get_count_on_video(id) - options.max_length
+        outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id, options.ratio),
+                                                      max(max_test, int(db.get_count_on_video(id) * ratio)))
         gt = db.get_groundtruth_from_id(id)
         gt = gt.reshape(list(gt.shape) + [1])
         acc = []
