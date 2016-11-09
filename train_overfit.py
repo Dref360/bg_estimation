@@ -92,7 +92,7 @@ for id in range(db.max_video):
     if db.get_count_on_video(id) * (1.0 - options.ratio) > 0 and options.max_length > 0:
         max_test = db.get_count_on_video(id) - options.max_length
         outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id, options.ratio),
-                                                      max(max_test, int(db.get_count_on_video(id) * ratio)))
+                                                      max(max_test, int(db.get_count_on_video(id) * options.ratio)))
         gt = db.get_groundtruth_from_id(id)
         gt = gt.reshape(list(gt.shape) + [1])
         acc = []
