@@ -62,7 +62,7 @@ class BaseModel():
         denom = (u_true ** 2 + u_pred ** 2 + c1) * (var_pred + var_true + c2)
         ssim /= denom
         ssim = tf.select(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
-        return K.mean(((1.0 - ssim) / 2))
+        return K.mean(((1.0 - ssim) / 2)) + K.mean(K.abs(y_true - y_pred))
 
     def build_model(self, loss="DSSIS", optimizer="rmsprop"):
         if loss == "DSSIS":
