@@ -97,7 +97,7 @@ for id in range(db.max_video):
         gt = gt.reshape(list(gt.shape) + [1])
         acc = []
         for i, output in enumerate(outputs):
-            acc.append(list(zip(head, Evaluate(gt, output))))
+            acc.append(list(zip(head, Evaluate(gt, output)))[:5]) # Only keep the first five.
         report["report"]["{}_{}".format(db.videos[id]["input"], id)] = acc
     json.dump(report, open("report{}.json".format(options.method), "w"))
     model.get_model().set_weights(init_weight)
