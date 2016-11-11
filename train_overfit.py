@@ -8,7 +8,6 @@ import numpy as np
 from analyze.Evaluate import Evaluate
 from data.database import Database
 from lib.decorator import GeneratorLoop
-from lib.reset_weights import shuffle_weights
 from lib.utils import chunks, CSVLogger
 from src.CRNN import CRNN
 from src.c3d import C3DModel
@@ -81,9 +80,10 @@ def get_generator_test_batched_for_id(id, ratio):
 
 head = ['AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
 report = {"report": {}}
+init_weight = model.get_model().get_weights()
 for id in range(db.max_video):
     print("VIDEO : {}".format(id))
-    shuffle_weights(model.get_model())
+    model.get_model().set_weights(init_weight)
     model.get_model().fit_generator(generator=get_generator_batched_for_id(id, options.ratio),
                                     samples_per_epoch=min(int(db.get_count_on_video(id) * options.ratio),
                                                           options.max_length),
@@ -99,5 +99,5 @@ for id in range(db.max_video):
         for i, output in enumerate(outputs):
             acc.append(list(zip(head, Evaluate(gt, output))))
         report["report"]["{}_{}".format(db.videos[id]["input"], id)] = acc
-    shuffle_weights(model.get_model())
     json.dump(report, open("report{}.json".format(options.method), "w"))
+    model.get_model().set_weights(init_weight)
