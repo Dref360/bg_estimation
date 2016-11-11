@@ -1,6 +1,5 @@
 # Here, we write the code to train the model, we overfit the model on a video and evaluate the result
 import argparse
-import json
 import logging
 
 import numpy as np
@@ -8,7 +7,7 @@ import numpy as np
 from analyze.Evaluate import Evaluate
 from data.database import Database
 from lib.decorator import GeneratorLoop
-from lib.utils import chunks, CSVLogger
+from lib.utils import chunks, CSVLogger, CSVLogging
 from src.CRNN import CRNN
 from src.c3d import C3DModel
 from src.unet import UNETModel
@@ -79,7 +78,7 @@ def get_generator_test_batched_for_id(id, ratio):
 
 
 head = ['AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
-report = {"report": {}}
+report = CSVLogging("report{}.json".format(options.method), head)
 init_weight = model.get_model().get_weights()
 for id in range(db.max_video):
     print("VIDEO : {}".format(id))
@@ -97,7 +96,6 @@ for id in range(db.max_video):
         gt = gt.reshape(list(gt.shape) + [1])
         acc = []
         for i, output in enumerate(outputs):
-            acc.append(list(zip(head, Evaluate(gt, output)))[:5]) # Only keep the first five.
-        report["report"]["{}_{}".format(db.videos[id]["input"], id)] = acc
-    json.dump(report, open("report{}.json".format(options.method), "w"))
+            report.write(Evaluate(gt, output)[:5])  # Only keep the first five.
     model.get_model().set_weights(init_weight)
+report.close()

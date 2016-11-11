@@ -1,7 +1,9 @@
-import keras
-from collections import Iterable, OrderedDict
-import numpy as np
 import csv
+from collections import Iterable, OrderedDict
+
+import keras
+import numpy as np
+
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
@@ -10,6 +12,18 @@ def chunks(l, n):
 
 def get_shape(T):
     return [i.value for i in T.get_shape()]
+
+
+class CSVLogging():
+    def __init__(self, fn, head):
+        self.fp = open(fn, "w")
+        print(",".join(head), file=self.fp)
+
+    def write(self, values):
+        print(",".join(values), file=self.fp)
+
+    def close(self):
+        self.fp.close()
 
 
 class CSVLogger(keras.callbacks.Callback):
