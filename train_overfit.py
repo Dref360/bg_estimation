@@ -78,7 +78,7 @@ def get_generator_test_batched_for_id(id, ratio):
 
 
 head = ['AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
-report = CSVLogging("report{}.json".format(options.method), head)
+report = CSVLogging("report{}.csv".format(options.method), head)
 init_weight = model.get_model().get_weights()
 for id in range(db.max_video):
     print("VIDEO : {}".format(id))
@@ -91,11 +91,11 @@ for id in range(db.max_video):
     if db.get_count_on_video(id) * (1.0 - options.ratio) > 0 and options.max_length > 0:
         max_test = db.get_count_on_video(id) - options.max_length
         outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id, options.ratio),
-                                                      max(max_test, int(db.get_count_on_video(id) * options.ratio)))
+                                                      5)
         gt = db.get_groundtruth_from_id(id)
         gt = gt.reshape(list(gt.shape) + [1])
         acc = []
         for i, output in enumerate(outputs):
-            report.write(Evaluate(gt, output)[:5])  # Only keep the first five.
+            report.write([str(x) for x in Evaluate(gt, output)])  # Only keep the first five.
     model.get_model().set_weights(init_weight)
 report.close()
