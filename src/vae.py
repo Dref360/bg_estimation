@@ -12,7 +12,15 @@ from src.base_model import BaseModel, Relu
 
 
 class VAE(BaseModel):
+    "Variational Autoencoder model. Taken from keras' Github"
     def __init__(self, sequence_size, img_size=321, batch_size=1, weight_file=None):
+        """
+        Initialize VAE model
+        :param sequence_size: number of frame
+        :param img_size: input layer size
+        :param batch_size: batch size to use in the model
+        :param weight_file: Use already initialized model. None for new
+        """
         self.output_size = 118
         BaseModel.__init__(self, "VAE", batch_size)
         self.sequence_size = sequence_size
@@ -23,6 +31,11 @@ class VAE(BaseModel):
             self.model.load_weights(weight_file)
 
     def sampling(self, args):
+        """
+        Sample the ouput to create the latent dimension
+        :param args: (z_mean, z_log_var)
+        :return: Distribution z_mean + e^z_logvar * epsilon
+        """
         latent_dim = 2
         epsilon_std = 0.01
         z_mean, z_log_var = args
@@ -31,6 +44,12 @@ class VAE(BaseModel):
         return z_mean + K.exp(z_log_var) * epsilon
 
     def vae_loss(self, x, x_decoded_mean):
+        """
+        Common vae_loss
+        :param x: groundtruth
+        :param x_decoded_mean: model's output
+        :return: loss_value
+        """
         self.output_size = 118
         # NOTE: binary_crossentropy expects a batch_size by dim
         # for x and x_decoded_mean, so we MUST flatten these!

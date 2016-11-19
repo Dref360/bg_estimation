@@ -21,6 +21,11 @@ class BaseModel():
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, name, batchsize):
+        """
+        Base Model for the models
+        :param name: Name of the model (Log purpose)
+        :param batchsize: batchsize to use
+        """
         self.name = name
         self.model = None
         self.batch_size = batchsize
@@ -30,19 +35,41 @@ class BaseModel():
 
     @abc.abstractmethod
     def _build_model(self):
+        """
+        Build the model, this method needs to be implemented by the children class
+        :return: None
+        """
         raise NotImplementedError
 
     def preprocess(self, batch, gt):
+        """
+        Preprocess the datas to fit into the network
+        :param batch: Array [samples,c,w,hframes] for input
+        :param gt: Array [samples,w,h] the grounftruth
+        :return: (batch,gt) batch = [samples,c,frames,w,h], gt = [sample,1,w,h]
+        """
         batch = np.transpose(batch, [0, 4, 1, 2, 3])
         batch = np.array(batch)
         gt = gt.reshape([self.batch_size, 1, self.output_size, self.output_size])
         return (batch, gt)
 
     def l2_loss(self, y, y_pred):
+        """
+        L2 Loss function
+        :param y: groundtruth
+        :param y_pred: model's prediction
+        :return: sum of squared error
+        """
         return K.sum(K.pow(y - y_pred, 2))
 
     def loss_DSSIS_tf11(self, y_true, y_pred):
-        """Need tf0.11rc to work"""
+        """
+        DSSIM loss function to get the structural dissimilarity between y_true and y_pred
+        :param y_true: groundtruth
+        :param y_pred: output from the model
+        :return: The loss value
+        :note Need tf0.11rc to work
+        """
         y_true = tf.reshape(y_true, [self.batch_size] + get_shape(y_pred)[1:])
         y_pred = tf.reshape(y_pred, [self.batch_size] + get_shape(y_pred)[1:])
         y_true_tf = tf.transpose(y_true, [0, 2, 3, 1])
@@ -64,9 +91,15 @@ class BaseModel():
         ssim = tf.select(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
         norma = K.mean(K.abs(y_true - y_pred))
         norma = tf.select(tf.is_nan(norma), K.ones_like(norma), norma)
-        return K.mean(((1.0 - ssim) / 2)) + norma
+        return K.mean(((1.0 - ssim) / 2)) + (norma / 2)
 
     def build_model(self, loss="DSSIS", optimizer="rmsprop"):
+        """
+        Build the model
+        :param loss: Loss function to use during training, str or function (y_pred,y_pred)
+        :param optimizer: Optimizer to use during training string or Optimizer
+        :return: None
+        """
         if loss == "DSSIS":
             loss = self.loss_DSSIS_tf11
         elif loss == "l2":
@@ -86,4 +119,8 @@ class BaseModel():
                            metrics=['accuracy'])
 
     def get_model(self):
+        """
+        Get the model builded
+        :return: Model
+        """
         return self.model
