@@ -53,9 +53,10 @@ db = Database(options.db_path, options.sequence_size, batch_size=options.batch_s
               output_size=model.output_size)
 max_epoch = 15
 
+
 @GeneratorLoop
-def get_generator_batched_for_id(id, ratio):
-    for batch in chunks(db.get_datas_on_one(id)[:min(int(db.get_count_on_video(id) * ratio), options.max_length)],
+def get_generator_batched_for_id(id):
+    for batch in chunks(db.get_datas_on_one(id),
                         options.batch_size):
         imgs, gts = zip(*batch)
         yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
@@ -66,9 +67,9 @@ ratio = 0.7
 
 
 @GeneratorLoop
-def get_generator_test_batched_for_id(id, ratio):
+def get_generator_test_batched_for_id(id):
     max_test = db.get_count_on_video(id) - options.max_length
-    for batch in chunks(db.get_datas_on_one(id)[max(max_test, int(db.get_count_on_video(id) * ratio)):],
+    for batch in chunks(db.get_datas_on_one(id),
                         options.batch_size):
         imgs, gts = zip(*batch)
         yield model.preprocess(np.asarray([db.load_imgs(img) for img in imgs]),
@@ -76,10 +77,10 @@ def get_generator_test_batched_for_id(id, ratio):
 
 
 if options.weight_file is None:
-    model.get_model().fit_generator(generator=get_generator_batched_for_id(options.videoid, ratio),
+    model.get_model().fit_generator(generator=get_generator_batched_for_id(options.videoid),
                                     samples_per_epoch=int(db.get_count_on_video(options.videoid) * ratio),
                                     nb_epoch=max_epoch)
-outputs = model.get_model().predict_generator(get_generator_batched_for_id(options.videoid, ratio),
+outputs = model.get_model().predict_generator(get_generator_batched_for_id(options.videoid),
                                               int(db.get_count_on_video(options.videoid) * (1 - ratio)))
 gt = db.get_groundtruth_from_id(options.videoid)
 acc = []
