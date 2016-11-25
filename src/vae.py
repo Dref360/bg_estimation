@@ -7,6 +7,7 @@ from keras import objectives
 from keras.layers import Convolution2D, Convolution3D, MaxPooling3D, Deconvolution2D
 from keras.layers import Input, Dense, Lambda, Flatten, Reshape
 from keras.models import Model
+from keras.optimizers import Adam
 
 from src.base_model import BaseModel, Relu
 
@@ -25,7 +26,7 @@ class VAE(BaseModel):
         BaseModel.__init__(self, "VAE", batch_size)
         self.sequence_size = sequence_size
         self.img_size = img_size
-        self.build_model(loss=self.vae_loss)
+        self.build_model(loss=self.vae_loss_tf, optimizer=Adam(lr=0.001))
         self.output_size = self.model.get_output_shape_at(-1)[-1]
         if weight_file:
             self.model.load_weights(weight_file)
@@ -42,6 +43,24 @@ class VAE(BaseModel):
         epsilon = K.random_normal(shape=(self.batch_size, latent_dim),
                                   mean=0., std=epsilon_std)
         return z_mean + K.exp(z_log_var) * epsilon
+
+    def vae_loss_tf(self, x, x_decoded_mean):
+        """
+        Common vae_loss
+        :param x: groundtruth
+        :param x_decoded_mean: model's output
+        :return: loss_value
+        """
+
+        reconstr_loss = \
+            -tf.reduce_sum(x * tf.log(1e-10 + x_decoded_mean)
+                           + (1 - x) * tf.log(1e-10 + 1 - x_decoded_mean),
+                           1)
+        latent_loss = -0.5 * tf.reduce_sum(1 + self.z_log_var
+                                           - tf.square(self.z_mean)
+                                           - tf.exp(self.z_log_var), 1)
+
+        return tf.reduce_mean(reconstr_loss + latent_loss)
 
     def vae_loss(self, x, x_decoded_mean):
         """
@@ -70,7 +89,7 @@ class VAE(BaseModel):
 
     def _build_model(self):
         latent_dim = 2
-        intermediate_dim = 128
+        intermediate_dim = 512
         epsilon_std = 0.01
         nb_conv = 3
         nb_filters = 64
