@@ -77,7 +77,7 @@ def get_generator_test_batched_for_id(id, ratio):
                                np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
-head = ['AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
+head = ['VIDNAME', 'AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
 report = CSVLogging("report{}.csv".format(options.method), head)
 init_weight = model.get_model().get_weights()
 for id in range(db.max_video):
@@ -96,6 +96,6 @@ for id in range(db.max_video):
         gt = gt.reshape(list(gt.shape) + [1])
         acc = []
         for i, output in enumerate(outputs):
-            report.write([str(x) for x in Evaluate(gt, output)])  # Only keep the first five.
+            report.write([db.videos[id]["input"]] + [str(x) for x in Evaluate(gt, output)])  # Only keep the first five.
     model.get_model().set_weights(init_weight)
 report.close()

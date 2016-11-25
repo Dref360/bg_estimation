@@ -63,7 +63,7 @@ def get_generator_batched_for_id(id):
                                np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
-ratio = 0.7
+ratio = 0.5
 
 
 @GeneratorLoop

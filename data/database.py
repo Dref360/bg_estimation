@@ -33,6 +33,7 @@ class Database:
                     "input": pjoin(path, category, video) + "/input"
                 }
                 self.videos.append(v)
+        shuffle(self.videos)
         self.max_video = len(self.videos) if custom_lenght is None else custom_lenght
 
     def get_datas(self):
