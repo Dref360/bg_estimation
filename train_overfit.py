@@ -7,7 +7,7 @@ import numpy as np
 from analyze.Evaluate import Evaluate
 from data.database import Database
 from lib.decorator import GeneratorLoop
-from lib.utils import chunks, CSVLogger, CSVLogging
+from lib.utils import chunks, CSVLogging
 from src.CRNN import CRNN
 from src.c3d import C3DModel
 from src.unet import UNETModel
@@ -80,22 +80,25 @@ def get_generator_test_batched_for_id(id, ratio):
 head = ['VIDNAME', 'AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
 report = CSVLogging("report{}.csv".format(options.method), head)
 init_weight = model.get_model().get_weights()
-for id in range(db.max_video):
-    print("VIDEO : {}".format(id))
-    model.get_model().set_weights(init_weight)
-    model.get_model().fit_generator(generator=get_generator_batched_for_id(id, options.ratio),
-                                    samples_per_epoch=min(int(db.get_count_on_video(id) * options.ratio),
-                                                          options.max_length),
-                                    nb_epoch=max_epoch,
-                                    callbacks=[CSVLogger("log.csv", append=True)])
-    if db.get_count_on_video(id) * (1.0 - options.ratio) > 0 and options.max_length > 0:
-        max_test = db.get_count_on_video(id) - options.max_length
-        outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id, options.ratio),
-                                                      5)
-        gt = db.get_groundtruth_from_id(id)
-        gt = gt.reshape(list(gt.shape) + [1])
-        acc = []
-        for i, output in enumerate(outputs):
-            report.write([db.videos[id]["input"]] + [str(x) for x in Evaluate(gt, output)])  # Only keep the first five.
-    model.get_model().set_weights(init_weight)
-report.close()
+try:
+    for id in range(db.max_video):
+        print("VIDEO : {}".format(id))
+        model.get_model().set_weights(init_weight)
+        model.get_model().fit_generator(generator=get_generator_batched_for_id(id, options.ratio),
+                                        samples_per_epoch=min(int(db.get_count_on_video(id) * options.ratio),
+                                                              options.max_length),
+                                        nb_epoch=max_epoch,
+                                        callbacks=[])
+        if db.get_count_on_video(id) * (1.0 - options.ratio) > 0 and options.max_length > 0:
+            max_test = db.get_count_on_video(id) - options.max_length
+            outputs = model.get_model().predict_generator(get_generator_test_batched_for_id(id, options.ratio),
+                                                          5)
+            gt = db.get_groundtruth_from_id(id)
+            gt = gt.reshape(list(gt.shape) + [1])
+            acc = []
+            for i, output in enumerate(outputs):
+                report.write(
+                    [db.videos[id]["input"]] + [str(x) for x in Evaluate(gt, output)])  # Only keep the first five.
+        model.get_model().set_weights(init_weight)
+finally:
+    report.close()

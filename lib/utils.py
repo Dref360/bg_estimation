@@ -41,7 +41,7 @@ class CSVLogging():
         :param values: [v1,...,vn]
         :return: None
         """
-        print(",".join(values), file=self.fp)
+        print(",".join(values), file=self.fp, flush=True)
 
     def close(self):
         """

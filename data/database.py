@@ -32,7 +32,8 @@ class Database:
                     "gt": pjoin(path, category, video) + "/GT_background1.jpg",
                     "input": pjoin(path, category, video) + "/input"
                 }
-                self.videos.append(v)
+                if len(os.listdir(v["input"])) > self.sequence_size:
+                    self.videos.append(v)
         shuffle(self.videos)
         self.max_video = len(self.videos) if custom_lenght is None else custom_lenght
 
