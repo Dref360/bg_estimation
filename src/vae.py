@@ -7,7 +7,6 @@ from keras import objectives
 from keras.layers import Convolution2D, Convolution3D, MaxPooling3D, Deconvolution2D
 from keras.layers import Input, Dense, Lambda, Flatten, Reshape
 from keras.models import Model
-from keras.optimizers import Adam
 
 from src.base_model import BaseModel, Relu
 
@@ -26,7 +25,7 @@ class VAE(BaseModel):
         BaseModel.__init__(self, "VAE", batch_size)
         self.sequence_size = sequence_size
         self.img_size = img_size
-        self.build_model(loss=self.vae_loss_tf, optimizer=Adam(lr=0.001))
+        self.build_model(loss="mean_squared_error")
         self.output_size = self.model.get_output_shape_at(-1)[-1]
         if weight_file:
             self.model.load_weights(weight_file)

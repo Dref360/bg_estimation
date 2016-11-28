@@ -83,6 +83,7 @@ if options.weight_file is None:
 outputs = model.get_model().predict_generator(get_generator_batched_for_id(options.videoid),
                                               int(db.get_count_on_video(options.videoid) * (1 - ratio)))
 gt = db.get_groundtruth_from_id(options.videoid)
+gt = gt.reshape(list(gt.shape) + [1])
 acc = []
 for i, output in enumerate(outputs):
     cv2.imwrite(output_file.format(options.method, i), output.reshape([model.output_size, model.output_size]) * 255.)
