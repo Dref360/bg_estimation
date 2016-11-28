@@ -1,8 +1,9 @@
 from math import floor
 
-import analyze.gauss as gauss
 import numpy as np
 from scipy import signal, ndimage
+
+import analyze.gauss as gauss
 
 
 def ssim(img1, img2, cs_map=False):
@@ -172,8 +173,6 @@ def Evaluate(GT, BC):
     threshold = 20
 
     Errors = Diff > threshold
-    print("LOL")
-    print(Errors.shape)
     EPs = sum(sum(Errors)).astype(float)
     pEPs = EPs / float(dimension)
 
@@ -195,4 +194,4 @@ def Evaluate(GT, BC):
     if C == 3:
         CQM = cqm(GT, BC)
 
-    return (AGE, pEPs, pCEPs, MSSSIM, PSNR, CQM)
+    return (AGE, pEPs.tolist(), pCEPs.tolist(), MSSSIM, PSNR.tolist(), CQM)

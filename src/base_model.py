@@ -25,6 +25,8 @@ class BaseModel():
         self.model = None
         self.batch_size = batchsize
         self.output_size = None
+        self.loss = self.loss_DSSIS_tf11
+        self.optimizer = "rmsprop"
 
     @abc.abstractmethod
     def _build_model(self):
@@ -60,19 +62,26 @@ class BaseModel():
         denom = (u_true ** 2 + u_pred ** 2 + c1) * (var_pred + var_true + c2)
         ssim /= denom
         ssim = tf.select(tf.is_nan(ssim), K.zeros_like(ssim), ssim)
-        return K.mean(((1.0 - ssim) / 2))
+        return K.mean(((1.0 - ssim) / 2)) + K.mean(K.abs(y_true - y_pred))
 
     def build_model(self, loss="DSSIS", optimizer="rmsprop"):
         if loss == "DSSIS":
             loss = self.loss_DSSIS_tf11
         elif loss == "l2":
             loss = self.l2_loss
+        self.loss = loss
+        self.optimizer = optimizer
 
         self.model = self._build_model()
         self.model.compile(optimizer=optimizer,
                            loss=loss,
                            metrics=['accuracy'])
         self.model.summary()
+
+    def reset(self):
+        self.model.compile(optimizer=self.optimizer,
+                           loss=self.loss,
+                           metrics=['accuracy'])
 
     def get_model(self):
         return self.model
