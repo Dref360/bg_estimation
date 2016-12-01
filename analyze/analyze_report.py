@@ -16,7 +16,6 @@ def get_info(vgg):
     vgg3["VIDNAME"] = vgg3.index
     vgg3["CAT"] = vgg3.apply(lambda x: str(Path(x["VIDNAME"]).parent.parent).split('/')[-1], 1)
     vgg4 = vgg3.groupby("CAT")[["AGE", "pEPs", "pCEPs", "MSSSIM", "PSNR"]].agg([np.mean, np.std])
-    vgg4 = vgg3.groupby("CAT")[["AGE", "pEPs", "pCEPs", "MSSSIM", "PSNR"]].mean()
     return vgg4
 
 

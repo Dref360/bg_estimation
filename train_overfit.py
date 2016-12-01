@@ -9,6 +9,7 @@ from data.database import Database
 from lib.decorator import GeneratorLoop
 from lib.utils import chunks, CSVLogging
 from src.CRNN import CRNN
+from src.SFModel import SFModel
 from src.c3d import C3DModel
 from src.unet import UNETModel
 from src.vae import VAE
@@ -20,7 +21,7 @@ parser.add_argument("--weight_file", dest="weight_file", type=str, help="model w
 parser.add_argument("--sequence_size", dest="sequence_size", default=10, type=int, help="batch size")
 parser.add_argument("--batch_size", dest="batch_size", default=1, type=int, help="batch size")
 parser.add_argument("--n_epochs", dest="n_epochs", default=10, type=int, help="nb epochs")
-parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,vgg,crnn,vae,unet]")
+parser.add_argument("--method", dest="method", default="c3d", type=str, help="[c3d,vgg,crnn,vae,unet,sf]")
 parser.add_argument("--ratio", dest="ratio", default=1.0, type=float, help="Ratio to separate train and test set")
 """Most of the model are too big to fit on the TITAN X, so it takes a really long time, taking a subset of the video
  will speed up processing on big videos"""
@@ -34,7 +35,7 @@ logging.basicConfig(filename='logging.log', level=logging.DEBUG,
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
 logging.info(vars(options))
 
-methods = ["c3d", "crnn", "vae", "unet", "vgg"]
+methods = ["c3d", "crnn", "vae", "unet", "vgg", "sf"]
 assert options.method in methods, "Not a valid method"
 
 if options.method == "c3d":
@@ -47,6 +48,8 @@ elif options.method == "vgg":
     model = VGG3DModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 elif options.method == "unet":
     model = UNETModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
+elif options.method == "sf":
+    model = SFModel(options.sequence_size, batch_size=options.batch_size, weight_file=options.weight_file)
 else:
     print("{} is not available at this moment".format(options.method))
     exit(0)
