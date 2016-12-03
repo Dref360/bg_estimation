@@ -3,6 +3,7 @@ import abc
 import keras.backend as K
 import numpy as np
 import tensorflow as tf
+from keras.utils.visualize_util import plot
 
 from lib.utils import get_shape
 
@@ -112,6 +113,7 @@ class BaseModel():
                            loss=loss,
                            metrics=['accuracy'])
         self.model.summary()
+        plot(self.model, to_file='output/{}.png'.format(self.name))
 
     def reset(self):
         self.model.compile(optimizer=self.optimizer,
