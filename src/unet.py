@@ -6,7 +6,18 @@ from src.base_model import BaseModel, Relu
 
 
 class UNETModel(BaseModel):
+    """
+    This model is adding a connection between layer conv_2 and layer deconv_1 this allows the models to remember the input.
+    """
+
     def __init__(self, sequence_size, img_size=321, batch_size=1, weight_file=None):
+        """
+        Initialize Unet model
+        :param sequence_size: number of frame
+        :param img_size: input layer size
+        :param batch_size: batch size to use in the model
+        :param weight_file: Use already initialized model. None for new
+        """
         BaseModel.__init__(self, "UNETModel", batch_size)
         self.sequence_size = sequence_size
         self.img_size = img_size

@@ -6,7 +6,17 @@ from src.base_model import BaseModel, Relu
 
 
 class VGG3DModel(BaseModel):
+    """
+    This model is using the first 5 blocks of VGG19 with the Conv2D replaced with Conv3D. This model is our baseline.
+    """
     def __init__(self, sequence_size, img_size=321, batch_size=1, weight_file=None):
+        """
+        Initialize VGG3D model
+        :param sequence_size: number of frame
+        :param img_size: input layer size
+        :param batch_size: batch size to use in the model
+        :param weight_file: Use already initialized model. None for new
+        """
         BaseModel.__init__(self, "C3DModel", batch_size)
         self.sequence_size = sequence_size
         self.img_size = img_size

@@ -1,15 +1,54 @@
-import keras
-from collections import Iterable, OrderedDict
-import numpy as np
 import csv
+from collections import Iterable, OrderedDict
+
+import keras
+import numpy as np
+
 
 def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
+    """Yield successive n-sized chunks from l.
+    :param l list to chunk
+    :param n size of chunk
+    :return Generator from chunk"""
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
 def get_shape(T):
+    """
+    Get the shape of a Tensorflow Tensor
+    :param T: Tensor
+    :return: Shape of the tensor
+    """
     return [i.value for i in T.get_shape()]
+
+
+class CSVLogging():
+    """
+    Easy to use logger to log list of values
+    """
+    def __init__(self, fn, head):
+        """
+        Initialized the logger
+        :param fn: filename
+        :param head: header ie [head1,...,headn]
+        """
+        self.fp = open(fn, "w")
+        print(",".join(head), file=self.fp)
+
+    def write(self, values):
+        """
+        Write the list to the file
+        :param values: [v1,...,vn]
+        :return: None
+        """
+        print(",".join(values), file=self.fp, flush=True)
+
+    def close(self):
+        """
+        Close the file
+        :return: None
+        """
+        self.fp.close()
 
 
 class CSVLogger(keras.callbacks.Callback):

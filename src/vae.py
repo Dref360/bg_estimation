@@ -12,17 +12,30 @@ from src.base_model import BaseModel, Relu
 
 
 class VAE(BaseModel):
+    "Variational Autoencoder model. Taken from keras' Github"
     def __init__(self, sequence_size, img_size=321, batch_size=1, weight_file=None):
+        """
+        Initialize VAE model
+        :param sequence_size: number of frame
+        :param img_size: input layer size
+        :param batch_size: batch size to use in the model
+        :param weight_file: Use already initialized model. None for new
+        """
         self.output_size = 118
         BaseModel.__init__(self, "VAE", batch_size)
         self.sequence_size = sequence_size
         self.img_size = img_size
-        self.build_model(loss=self.vae_loss)
+        self.build_model(loss="mean_squared_error")
         self.output_size = self.model.get_output_shape_at(-1)[-1]
         if weight_file:
             self.model.load_weights(weight_file)
 
     def sampling(self, args):
+        """
+        Sample the ouput to create the latent dimension
+        :param args: (z_mean, z_log_var)
+        :return: Distribution z_mean + e^z_logvar * epsilon
+        """
         latent_dim = 2
         epsilon_std = 0.01
         z_mean, z_log_var = args
@@ -30,7 +43,31 @@ class VAE(BaseModel):
                                   mean=0., std=epsilon_std)
         return z_mean + K.exp(z_log_var) * epsilon
 
+    def vae_loss_tf(self, x, x_decoded_mean):
+        """
+        Common vae_loss
+        :param x: groundtruth
+        :param x_decoded_mean: model's output
+        :return: loss_value
+        """
+
+        reconstr_loss = \
+            -tf.reduce_sum(x * tf.log(1e-10 + x_decoded_mean)
+                           + (1 - x) * tf.log(1e-10 + 1 - x_decoded_mean),
+                           1)
+        latent_loss = -0.5 * tf.reduce_sum(1 + self.z_log_var
+                                           - tf.square(self.z_mean)
+                                           - tf.exp(self.z_log_var), 1)
+
+        return tf.reduce_mean(reconstr_loss + latent_loss)
+
     def vae_loss(self, x, x_decoded_mean):
+        """
+        Common vae_loss
+        :param x: groundtruth
+        :param x_decoded_mean: model's output
+        :return: loss_value
+        """
         self.output_size = 118
         # NOTE: binary_crossentropy expects a batch_size by dim
         # for x and x_decoded_mean, so we MUST flatten these!
@@ -51,7 +88,7 @@ class VAE(BaseModel):
 
     def _build_model(self):
         latent_dim = 2
-        intermediate_dim = 128
+        intermediate_dim = 512
         epsilon_std = 0.01
         nb_conv = 3
         nb_filters = 64
