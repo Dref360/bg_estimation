@@ -2,6 +2,7 @@
 import argparse
 import logging
 
+import cv2
 import numpy as np
 
 from analyze.Evaluate import Evaluate
@@ -80,12 +81,13 @@ def get_generator_test_batched_for_id(id, ratio):
                                np.asarray([db.get_groundtruth(gt, 255.0) for gt in gts]))
 
 
+output_file = "output/out{}_{}_{}.png"
 head = ['VIDNAME', 'AGE', 'pEPs', 'pCEPs', 'MSSSIM', 'PSNR', 'CQM']
 report = CSVLogging("report{}.csv".format(options.method), head)
 init_weight = model.get_model().get_weights()
 try:
     for id in range(db.max_video):
-        print("VIDEO : {}".format(id))
+        print("VIDEO : {}, {}".format(id, db.videos[id]["input"][-15:]))
         model.get_model().set_weights(init_weight)
         model.get_model().fit_generator(generator=get_generator_batched_for_id(id, options.ratio),
                                         samples_per_epoch=min(int(db.get_count_on_video(id) * options.ratio),
@@ -100,6 +102,8 @@ try:
             gt = gt.reshape(list(gt.shape) + [1])
             acc = []
             for i, output in enumerate(outputs):
+                cv2.imwrite(output_file.format(options.method, id, i),
+                            output.reshape([model.output_size, model.output_size]) * 255.)
                 report.write(
                     [db.videos[id]["input"]] + [str(x) for x in Evaluate(gt, output)])  # Only keep the first five.
         model.get_model().set_weights(init_weight)

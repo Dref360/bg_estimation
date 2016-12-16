@@ -113,7 +113,7 @@ class BaseModel():
                            loss=loss,
                            metrics=['accuracy'])
         self.model.summary()
-        plot(self.model, to_file='output/{}.png'.format(self.name))
+        plot(self.model, to_file='output/{}.png'.format(self.name),show_shapes=True)
 
     def reset(self):
         self.model.compile(optimizer=self.optimizer,
